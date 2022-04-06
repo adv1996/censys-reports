@@ -1,4 +1,4 @@
-import { IRiskMapping } from "../interfaces/riskMapping.interface";
+import { INode, IRiskMapping } from "../interfaces/riskMapping.interface";
 import { IRiskObject,  ICompleteRiskObject } from "../interfaces/riskObject.interface";
 import { keyBy, round } from 'lodash'
 
@@ -24,10 +24,43 @@ export const calculateSeverityByTime = (riskObjects: ICompleteRiskObject[]) => {
   return riskObjects.filter(riskObject => riskObject.parsed_date >= lastMonth && riskObject.severity === 'critical').length;
 }
 
+export const getMaxDate = (riskObjects: ICompleteRiskObject[]) => {
+  if (riskObjects.length === 0) return new Date()
+  return riskObjects.reduce((a, b) => (a.parsed_date > b.parsed_date ? a : b)).parsed_date;
+}
+
+export const getMinDate = (riskObjects: ICompleteRiskObject[]) => {
+  if (riskObjects.length === 0) return new Date()
+  return riskObjects.reduce((a, b) => (a.parsed_date > b.parsed_date ? b : a)).parsed_date;
+}
+
 export const calculateAverageRiskPerDay = (riskObjects: ICompleteRiskObject[]) => {
-  if (riskObjects.length === 0) return 0
-  const minDate = riskObjects.reduce((a, b) => (a.parsed_date > b.parsed_date ? a : b)).parsed_date;
-  const maxDate = riskObjects.reduce((a, b) => (a.parsed_date > b.parsed_date ? b : a)).parsed_date;
-  const daysInBetween = (minDate.getTime() - maxDate.getTime())  / (1000 * 3600 * 24);
+  const minDate = getMinDate(riskObjects)
+  const maxDate = getMaxDate(riskObjects);
+  const daysInBetween = (maxDate.getTime() - minDate.getTime())  / (1000 * 3600 * 24);
   return round((riskObjects.length / daysInBetween), 2)
+}
+
+export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
+  const lookupMap: Record<string, string | null> = {}
+  const nodes: INode[] = [] 
+  riskMapping.forEach(record => {
+    const values = [
+      { parent: null, id: record.parent },
+      { parent: record.parent, id: record.child },
+      { parent: record.child, id: record.subchild },
+      { parent: record.subchild, id: record.name }
+    ]
+    values.forEach(node => {
+      if (!(node.id in lookupMap)) {
+        lookupMap[node.id] = node.parent
+        nodes.push({
+          id: node.id,
+          parent: node.parent,
+          nodes: []
+        })
+      }
+    })
+  })
+  return nodes
 }

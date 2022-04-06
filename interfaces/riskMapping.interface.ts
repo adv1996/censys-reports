@@ -8,3 +8,9 @@ export type IRiskMapping = {
   child: string
   subchild: string
 }
+
+export interface INode {
+  id: string
+  parent: string | null
+  nodes: INode[]
+}
