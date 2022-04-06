@@ -4,24 +4,51 @@ import { ICompleteRiskObject } from '../interfaces/riskObject.interface';
 import { forceSimulation, forceX, forceY, forceManyBody, forceCollide } from 'd3';
 import useChart from '../hooks/useChart';
 
-interface INode {
+interface ISimNode {
   x: number;
   y: number;
-  radius: number;
 }
+
+interface ISeverity {
+  radius: number
+  fill: string
+}
+
+type ISeverityNode = ISimNode & ISeverity
 
 const ChartSwarm = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasCtxRef = useRef<CanvasRenderingContext2D | null>(null)
-  const RADIUS = 3
+  const RADIUS = 8
 
-  const nodes = useMemo(() => data.filter(d => d.status === 'open').map(() => {
+  const severityRadiusMap: Record<string, ISeverity> = {
+    'critical': {
+      radius: 8,
+      fill: 'red'
+    },
+    'high': {
+      radius: 6,
+      fill: 'orange'
+    },
+    'medium': {
+      radius: 4,
+      fill: 'yellow'
+    },
+    'low': {
+      radius: 2,
+      fill: 'blue'
+    }
+  }
+  const nodes = useMemo(() => data.filter(d => d.status === 'open').map((d) => {
+    const severityInfo = severityRadiusMap[d.severity]
     return {
       x: 0,
       y: 0,
-      radius: RADIUS
+      radius: severityInfo.radius,
+      fill: severityInfo.fill
     }
-  }) as INode[], [data])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }) as ISeverityNode[], [data])
 
   const margin: IMargin = {
     top: 0,
@@ -39,11 +66,11 @@ const ChartSwarm = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
 
       const ticked = () => {
         ctx!.clearRect(0, 0, plotWidth, plotHeight);
-        nodes.forEach((node: { x: number; y: number; radius: number; }) => {
+        nodes.forEach((node: ISeverityNode) => {
           ctx!.beginPath();
           ctx!.arc(node.x, node.y, node.radius - 1, 0, 2 * Math.PI);
           ctx!.stroke();
-          ctx!.fillStyle = 'black';
+          ctx!.fillStyle = node.fill;
           ctx!.fill();
         })
       }

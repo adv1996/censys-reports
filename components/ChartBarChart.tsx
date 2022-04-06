@@ -62,7 +62,9 @@ const ChartBarChart = ({ width, height, data }: IChart<ICompleteRiskObject>) => 
   return (
     <svg height={height} width={width}>
       <g transform={`translate(${margin.left}, ${margin.top})`}>
-        {bars.map(bar => <rect {...bar} key={bar.key} />)}
+        {bars.map(bar =>
+          <rect {...bar} key={bar.key} className="hover:tw-fill-blue-100 tw-cursor-pointer"/>
+        )}
         {yScale(1) && yAxisLabels.map(label =>
           <text
             key={label.toString()}

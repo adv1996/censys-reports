@@ -1,6 +1,6 @@
 import useChart from "../hooks/useChart"
 import { IChart, IMargin } from "../interfaces/chart.interface"
-import { arc, scaleBand, scaleLinear, range, ScaleBand, path } from 'd3'
+import { arc, scaleBand, scaleLinear, range, ScaleBand } from 'd3'
 import { useMemo, useState } from 'react'
 import { INode, IRiskMapping } from "../interfaces/riskMapping.interface"
 import { riskTypeRelations } from "../models/utils"
@@ -113,7 +113,7 @@ const ChartSunBurst = ({ width, height, data }: IChart<IRiskMapping>) => {
       {/* // TODO CENTER THIS */}
       <div className="tw-absolute" style={{ top: `${centerY - margin.top / 2}px`, left: `${centerX - margin.left / 2}px` }}>
         <div className="tw-flex tw-flex-row tw-w-6">
-          <p className="tw-text-white">{ label }</p>
+          <p className="tw-text-white tw-text-sm">{ label }</p>
         </div>
       </div>
     </div>
