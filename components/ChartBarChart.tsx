@@ -37,7 +37,7 @@ const ChartBarChart = ({ width, height, data }: IChart<ICompleteRiskObject>) => 
   })
   
   const yScale = scaleLog()
-    .domain([Math.max(...dailyData.map(d => d.count)), Math.min(...dailyData.map(d => d.count))])
+    .domain([Math.max(...dailyData.map(d => d.count)), 1])
     .range([plotHeight, 0])
   
   const xScale = scaleBand()

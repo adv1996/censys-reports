@@ -1,6 +1,7 @@
 import { INode, IRiskMapping } from "../interfaces/riskMapping.interface";
 import { IRiskObject,  ICompleteRiskObject } from "../interfaces/riskObject.interface";
 import { keyBy, round } from 'lodash'
+import { IFilter } from "../interfaces/filter.interface";
 
 export const calculateOpenRisks = (riskObjects: IRiskObject[]) => {
   return riskObjects.filter(riskObject => riskObject.status === 'open').length // replace with enum
@@ -63,4 +64,15 @@ export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
     })
   })
   return nodes
+}
+
+// TODO move this into filter model
+export const evaluateFilters = (riskObjects: ICompleteRiskObject[], filters: IFilter<ICompleteRiskObject>[]) => {
+  return riskObjects.filter(riskObject => {
+    for (let i = 0; i < filters.length; i++) {
+      const filter = filters[i]
+      return filter.value.includes(riskObject[filter.key] as string)
+    }
+    return false
+  })
 }
