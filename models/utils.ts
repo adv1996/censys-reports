@@ -12,6 +12,7 @@ export const weaveSeverity = (riskObjects: IRiskObject[], riskMapping: IRiskMapp
   return riskObjects.map(riskObject => {
     return {
       ...riskObject,
+      type_id: riskObject['type_id'].toString(),
       severity: severityMap[riskObject['type_id']].recommended_severity,
       type: severityMap[riskObject['type_id']].type,
       parsed_date: new Date(riskObject['first_date'])
@@ -44,7 +45,8 @@ export const calculateAverageRiskPerDay = (riskObjects: ICompleteRiskObject[]) =
 
 export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
   const lookupMap: Record<string, string | null> = {}
-  const nodes: INode[] = [] 
+  const nodes: INode[] = []
+
   riskMapping.forEach(record => {
     const values = [
       { parent: null, id: record.parent },
@@ -52,6 +54,7 @@ export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
       { parent: record.child, id: record.subchild },
       { parent: record.subchild, id: record.name }
     ]
+    
     values.forEach(node => {
       if (!(node.id in lookupMap)) {
         lookupMap[node.id] = node.parent
@@ -62,18 +65,21 @@ export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
         })
       }
     })
+
+
   })
-  return nodes
+  return { nodes }
 }
 
 // TODO move this into filter model
 export const evaluateFilters = (riskObjects: ICompleteRiskObject[], filters: IFilter<ICompleteRiskObject>[]) => {
-  console.log(filters)
   return riskObjects.filter(riskObject => {
     for (let i = 0; i < filters.length; i++) {
       const filter = filters[i]
-      return filter.value.includes(riskObject[filter.key] as string)
+      if (!filter.value.includes(riskObject[filter.key] as string)) {
+        return false
+      }
     }
-    return false
+    return true
   })
 }

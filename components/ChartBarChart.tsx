@@ -14,7 +14,7 @@ interface IBar {
 }
 
 const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<ICompleteRiskObject>) => {
-  const riskObjects = data as ICompleteRiskObject[]
+  const riskObjects = (data as ICompleteRiskObject[]).filter(d => d.status === 'open')
   const timeHorizon = [getMinDate(riskObjects), getMaxDate(riskObjects)]
 
   const margin: IMargin = {
@@ -52,9 +52,9 @@ const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<IComp
 
   const calculateFill = (bar: IBar) => {
     if (highlightFilter && highlightFilter.value.includes(bar.dateStr)) {
-      return 'blue'
+      return 'white'
     }
-    return 'black'
+    return 'orange'
   }
 
   const bars = dailyData.map(r => {
@@ -65,14 +65,19 @@ const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<IComp
         x: xScale(r.day),
         y: plotHeight - yScale(r.count),
         fill: calculateFill(r),
-        stroke: 'white'
+        stroke: 'black'
       },
       key: r.day,
       date: r.dateStr
     }
   })
 
-  const yAxisLabels = [1, 10, 100, 1000, 10000]
+  const yAxisLabels = useMemo(() => [1, 30, 300, 3000].map(pos => {
+    return {
+      y: yScale(pos) || 0,
+      label: pos
+    }
+  }), [yScale])
 
   const xAxisLabels = range(0, dailyData.length, Math.floor(dailyData.length / 10))
 
@@ -95,15 +100,16 @@ const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<IComp
             onClick={() => selectBar(bar.date)}
           />
         )}
-        {yScale(1) && yAxisLabels.map(label =>
+        {yAxisLabels.map(pos =>
           <text
-            key={label.toString()}
+            key={pos.label.toString()}
             x={-margin.left + 20}
-            y={plotHeight - yScale(label)}
+            y={plotHeight - pos.y}
             textAnchor="right"
             fontSize="10px"
+            fill="white"
           >
-            {label}
+            {pos.label}
           </text>)}
         {xAxisLabels.map(r => {
           return <text

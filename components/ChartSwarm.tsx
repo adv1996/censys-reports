@@ -24,19 +24,19 @@ const ChartSwarm = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
   const severityRadiusMap: Record<string, ISeverity> = {
     'critical': {
       radius: 8,
-      fill: 'red'
+      fill: '#e31a1c'
     },
     'high': {
       radius: 6,
-      fill: 'orange'
+      fill: '#fd8d3c'
     },
     'medium': {
       radius: 4,
-      fill: 'yellow'
+      fill: '#fecc5c'
     },
     'low': {
       radius: 2,
-      fill: 'blue'
+      fill: '#ffffb2'
     }
   }
   const nodes = useMemo(() => data.filter(d => d.status === 'open').map((d) => {
@@ -94,7 +94,21 @@ const ChartSwarm = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
     <div className="tw-flex tw-flex-col tw-justify-center">
       <canvas ref={canvasRef} width={plotWidth} height={plotHeight}/>
       <button onClick={startSimulation}className="tw-bg-slate-200 tw-h-[40px] tw-p-2 tw-border tw-border-black tw-mx-2">
-        Analyze Risks
+        <div className="tw-flex tw-flex-row tw-justify-between">
+          <div className="tw-font-bold tw-flex tw-flex-row tw-space-x-2">
+            <h5 className="tw-text-black">
+              Analyze Risks
+            </h5>
+            <svg xmlns="http://www.w3.org/2000/svg" className="tw-stroke-black tw-h-6 tw-w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+            </svg>
+          </div>
+          <div>
+            {Object.keys(severityRadiusMap).map(severity =>
+            <span className="tw-p-2" style={{'backgroundColor': severityRadiusMap[severity].fill}} key={severity}>{severity}</span>
+          )}
+          </div>
+        </div>
       </button>
     </div>
   )

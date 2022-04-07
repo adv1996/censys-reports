@@ -29,7 +29,19 @@ const buildTreeMap = (relationshipData: INode[]) => {
     }
   })
 
-  return tree
+  return { tree, lookupMap }
+}
+
+const getAllChildren = (lookupMap: Record<string, INode>, id: string) => {
+  const nodes = lookupMap[id].nodes
+  if (nodes.length === 0) {
+    return [id]
+  }
+  let results = [id]
+  nodes.forEach(node => {
+    results = [...results, ...getAllChildren(lookupMap, node.id)]
+  })
+  return results
 }
 
 const traverseTree = (tree: INode[], yScale: ScaleBand<string>, level = 0, startAngle=-Math.PI, endAngle=Math.PI): IArc[] => {
@@ -41,12 +53,13 @@ const traverseTree = (tree: INode[], yScale: ScaleBand<string>, level = 0, start
       endAngle: xScale(nodeIndex + 1),
       innerRadius: yScale(level.toString()) || 0,
       outerRadius: (yScale(level.toString()) || 0) + yScale.bandwidth(),
-      id: node.id
+      id: node.id,
+      level
     }, ...traverseTree(node.nodes, yScale, level + 1, xScale(nodeIndex), xScale(nodeIndex + 1))].flat()
   }).flat()
 }
 
-const ChartSunBurst = ({ width, height, data, addFilter }: IChart<IRiskMapping>) => {
+const ChartSunBurst = ({ width, height, data, addFilter, filters}: IChart<IRiskMapping>) => {
   const [label, setLabel] = useState('Hierarchy Map')
   const LEVELS = 4
   const PAD_ANGLE = 0
@@ -71,11 +84,12 @@ const ChartSunBurst = ({ width, height, data, addFilter }: IChart<IRiskMapping>)
 
   const yScale = scaleBand()
     .domain(range(LEVELS).map(col => col.toString()))
-    .rangeRound([radius * .25, radius]) // 50 is the minimum inner radius
+    .rangeRound([radius * .25, radius])
     .paddingInner(0.1)
 
-  const relationData = riskTypeRelations(data)
-  const tree = buildTreeMap(relationData)
+  const { nodes } = riskTypeRelations(data)
+  const { tree, lookupMap } = buildTreeMap(nodes)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const slices = traverseTree(tree, yScale)
 
   const centerArc = useMemo(() => {
@@ -89,8 +103,14 @@ const ChartSunBurst = ({ width, height, data, addFilter }: IChart<IRiskMapping>)
   }, [pathGenerator, radius])
 
   const selectSlice = (slice: IArc) => {
-    // map id to tree map and find names to add filter
-    addFilter({key: 'recommended_severity', value: ['high']})
+    addFilter({key: 'name', value: getAllChildren(lookupMap, slice.id)})
+  }
+
+  const calculateFill = (slice: IArc) => {
+    if (filters.length === 0) {
+      return '#ffffd4'
+    }
+    return filters[0].value.includes(slice.id) ? 'orange' : '#ffffd4'
   }
 
   return (
@@ -102,7 +122,7 @@ const ChartSunBurst = ({ width, height, data, addFilter }: IChart<IRiskMapping>)
               <path
                 key={slice.id}
                 d={pathGenerator(slice)?.toString()}
-                fill="white"
+                fill={calculateFill(slice)}
                 stroke="black"
                 onMouseOver={() => setLabel(slice.id)}
                 onMouseOut={() => setLabel('Hierarchy')}
