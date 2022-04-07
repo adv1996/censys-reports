@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000/api/' : 'https://censys-reports.vercel.app/api'
+const BASE_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000/api/' : 'https://censys-reports.vercel.app/api/'
 
 export interface ApiResponse<T> {
   errorMessage?: string
