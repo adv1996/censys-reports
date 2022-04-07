@@ -118,6 +118,7 @@ const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<IComp
             y={plotHeight + 10}
             fontSize="8px"
             textAnchor="middle"
+            fill="white"
           >
             { dailyData[r].dateStr }
           </text>
