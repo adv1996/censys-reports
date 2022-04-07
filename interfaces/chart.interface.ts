@@ -1,7 +1,11 @@
+import { IFilter } from "./filter.interface";
+
 export interface IChart<T> {
   width: number
   height: number
+  addFilter(filter: IFilter<T>): void
   data: T[]
+  filters: IFilter<T>[]
 }
 
 export interface IMargin {

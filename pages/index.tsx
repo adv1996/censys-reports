@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import entityService from '../models/entityService'
 import { IRiskObject, ICompleteRiskObject } from '../interfaces/riskObject.interface'
 import { IRiskMapping } from '../interfaces/riskMapping.interface'
@@ -11,7 +11,8 @@ import ChartSunBurst from '../components/ChartSunBurst'
 import ChartFrame from '../components/ChartFrame'
 import ChartBarChart from '../components/ChartBarChart'
 import ChartSwarm from '../components/ChartSwarm'
-import FilterEngine from '../models/filterEngine'
+import { IFilter } from '../interfaces/filter.interface'
+import useFilterEngine from '../hooks/useFilterEngine'
 
 const Home: NextPage = () => {
   const [riskObjects, setRiskObjects] = useState([] as ICompleteRiskObject[])
@@ -19,18 +20,22 @@ const Home: NextPage = () => {
   const [filteredRiskObjects, setFilteredRiskObjects] = useState([] as ICompleteRiskObject[])
   
   // TODO move this somewhere else
-  const filterEngine = useRef(new FilterEngine<ICompleteRiskObject>())
+  const { addFilter, clearFilters, filters} = useFilterEngine<ICompleteRiskObject>()
 
-  const clearFilters = () => {
-    filterEngine.current.clear()
+  const clearFiltersRisk = () => {
+    clearFilters()
     setFilteredRiskObjects(riskObjects)
   }
 
-  const addFilter = () => {
-    
-    filterEngine.current.add({ key: 'severity', value: ['critical'] })
-    setFilteredRiskObjects(evaluateFilters(riskObjects, filterEngine.current.get()))
+  const addFilterRisk = (filter: IFilter<ICompleteRiskObject>) => {
+    const newFilters = addFilter(filter)
+    setFilteredRiskObjects(evaluateFilters(riskObjects, newFilters))
   }
+
+  const addFilterMap = () => {
+    addFilterRisk({key: 'severity', value: ['critical']})
+  }
+
   // TODO use some sort of suspense / concurrency library for loading data
   useEffect(() => {
     async function fetchData() {
@@ -60,7 +65,9 @@ const Home: NextPage = () => {
           <div className='tw-flex tw-flex-row'>
             <h3 className="tw-text-white tw-self-center">Censys Risk Report</h3>
           </div>          
-          <button onClick={ clearFilters } className="tw-text-white">Clear</button>
+          <button onClick={ clearFiltersRisk } className="tw-text-white">
+            Clear <span className="tw-p-1 tw-rounded tw-bg-white tw-text-black tw-text-xs tw-h-1 tw-w-1">{filters.length}</span>
+          </button>
         </div>
         <div className={[styles.container, "tw-grid tw-grid-rows-6 tw-grid-cols-6 tw-gap-4 tw-p-4"].join(' ')}>
           <div className='tw-row-span-1 tw-col-span-2 tw-border tw-border-black'>
@@ -73,13 +80,13 @@ const Home: NextPage = () => {
             <KeyPerformanceIndicator metric={calculateAverageRiskPerDay(filteredRiskObjects)} label="Average Risks Discovered Per Day"/>
           </div>
           <div className='tw-row-span-4 tw-border tw-border-black tw-col-span-3'>
-            <ChartFrame chart={ChartSunBurst} data={riskMapping}/>
+            <ChartFrame chart={ChartSunBurst} data={riskMapping} addFilter={addFilterMap} filters={[]}/>
           </div>
           <div className='tw-row-span-4 tw-border tw-border-black tw-col-span-3'>
-            {filteredRiskObjects.length > 1 && <ChartFrame chart={ChartSwarm} data={filteredRiskObjects} />}
+            {filteredRiskObjects.length > 1 && <ChartFrame chart={ChartSwarm} data={filteredRiskObjects} addFilter={addFilterRisk}  filters={filters}/>}
           </div>
           <div className='tw-row-span-1 tw-border tw-border-black tw-col-span-6'>
-            <ChartFrame chart={ChartBarChart} data={filteredRiskObjects}/>
+            <ChartFrame chart={ChartBarChart} data={riskObjects} addFilter={addFilterRisk} filters={filters}/>
           </div>
         </div>
       </main>

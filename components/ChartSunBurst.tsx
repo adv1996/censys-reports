@@ -46,7 +46,7 @@ const traverseTree = (tree: INode[], yScale: ScaleBand<string>, level = 0, start
   }).flat()
 }
 
-const ChartSunBurst = ({ width, height, data }: IChart<IRiskMapping>) => {
+const ChartSunBurst = ({ width, height, data, addFilter }: IChart<IRiskMapping>) => {
   const [label, setLabel] = useState('Hierarchy Map')
   const LEVELS = 4
   const PAD_ANGLE = 0
@@ -88,6 +88,11 @@ const ChartSunBurst = ({ width, height, data }: IChart<IRiskMapping>) => {
     return pathGenerator(params)?.toString()
   }, [pathGenerator, radius])
 
+  const selectSlice = (slice: IArc) => {
+    // map id to tree map and find names to add filter
+    addFilter({key: 'recommended_severity', value: ['high']})
+  }
+
   return (
     <div className="tw-relative">
       <svg height={height} width={width}>
@@ -101,6 +106,7 @@ const ChartSunBurst = ({ width, height, data }: IChart<IRiskMapping>) => {
                 stroke="black"
                 onMouseOver={() => setLabel(slice.id)}
                 onMouseOut={() => setLabel('Hierarchy')}
+                onClick={() => selectSlice(slice)}
               />)}
             {
               <g>

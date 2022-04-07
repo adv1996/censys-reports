@@ -4,6 +4,8 @@ import { ICompleteRiskObject } from "../interfaces/riskObject.interface"
 import { getMaxDate, getMinDate } from "../models/utils"
 import { timeDay, scaleBand, range, scaleLog } from 'd3'
 import { groupBy, mapValues } from 'lodash'
+import { IFilter } from "../interfaces/filter.interface"
+import { useMemo } from 'react'
 
 interface IBar {
   day: string,
@@ -11,7 +13,7 @@ interface IBar {
   count: number
 }
 
-const ChartBarChart = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
+const ChartBarChart = ({ width, height, data, addFilter, filters }: IChart<ICompleteRiskObject>) => {
   const riskObjects = data as ICompleteRiskObject[]
   const timeHorizon = [getMinDate(riskObjects), getMaxDate(riskObjects)]
 
@@ -44,14 +46,29 @@ const ChartBarChart = ({ width, height, data }: IChart<ICompleteRiskObject>) => 
     .domain(dailyData.map(r => r.day))
     .range([0, plotWidth])
   
+  const highlightFilter = useMemo(() => {
+    return filters.find((filter) => filter.key === 'first_date')
+  }, [filters])
+
+  const calculateFill = (bar: IBar) => {
+    if (highlightFilter && highlightFilter.value.includes(bar.dateStr)) {
+      return 'blue'
+    }
+    return 'black'
+  }
+
   const bars = dailyData.map(r => {
     return {
-      width: xScale.bandwidth(),
-      height: yScale(r.count),
-      x: xScale(r.day),
-      y: plotHeight - yScale(r.count),
+      properties: {
+        width: xScale.bandwidth(),
+        height: yScale(r.count),
+        x: xScale(r.day),
+        y: plotHeight - yScale(r.count),
+        fill: calculateFill(r),
+        stroke: 'white'
+      },
       key: r.day,
-      stroke: 'white'
+      date: r.dateStr
     }
   })
 
@@ -59,11 +76,24 @@ const ChartBarChart = ({ width, height, data }: IChart<ICompleteRiskObject>) => 
 
   const xAxisLabels = range(0, dailyData.length, Math.floor(dailyData.length / 10))
 
+  const selectBar = (date: string) => {
+    const filter: IFilter<ICompleteRiskObject> = {
+      key: 'first_date',
+      value: [date]
+    }
+    addFilter(filter)
+  }
+
   return (
     <svg height={height} width={width}>
       <g transform={`translate(${margin.left}, ${margin.top})`}>
         {bars.map(bar =>
-          <rect {...bar} key={bar.key} className="hover:tw-fill-blue-100 tw-cursor-pointer"/>
+          <rect
+            {...bar.properties}
+            key={bar.key}
+            className="hover:tw-fill-blue-100 tw-cursor-pointer"
+            onClick={() => selectBar(bar.date)}
+          />
         )}
         {yScale(1) && yAxisLabels.map(label =>
           <text

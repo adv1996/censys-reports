@@ -93,7 +93,9 @@ const ChartSwarm = ({ width, height, data }: IChart<ICompleteRiskObject>) => {
   return (
     <div className="tw-flex tw-flex-col tw-justify-center">
       <canvas ref={canvasRef} width={plotWidth} height={plotHeight}/>
-      <button onClick={startSimulation}className="tw-bg-slate-200 tw-h-[40px] tw-p-2 tw-border tw-border-black tw-mx-2">Start Simulation</button>
+      <button onClick={startSimulation}className="tw-bg-slate-200 tw-h-[40px] tw-p-2 tw-border tw-border-black tw-mx-2">
+        Analyze Risks
+      </button>
     </div>
   )
 }

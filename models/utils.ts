@@ -68,6 +68,7 @@ export const riskTypeRelations = (riskMapping: IRiskMapping[]) => {
 
 // TODO move this into filter model
 export const evaluateFilters = (riskObjects: ICompleteRiskObject[], filters: IFilter<ICompleteRiskObject>[]) => {
+  console.log(filters)
   return riskObjects.filter(riskObject => {
     for (let i = 0; i < filters.length; i++) {
       const filter = filters[i]
